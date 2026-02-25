@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'NatureMama Heritage - E-commerce Backend Infrastructure'
+
+Parameters:
+  SenderEmail:
+    Type: String
+    Description: 'Verified email address for sending order confirmations (must be verified in SES)'
+    Default: 'noreply@naturemamaheritage.com'
+
+Resources:
+  # DynamoDB Table for Orders
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: NatureMamaOrders
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: orderNumber
+          AttributeType: S
+      KeySchema:
+        - AttributeName: orderNumber
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Application
+          Value: NatureMamaHeritage
+        - Key: Environment
+          Value: Production
+
+  # IAM Role for Lambda Function
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: NatureMamaLambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: !GetAtt OrdersTable.Arn
+        - PolicyName: SESAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: '*'
+
+  # Lambda Function
+  OrderHandlerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: NatureMamaOrderHandler
+      Runtime: nodejs20.x
+      Handler: orderHandler.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          ORDERS_TABLE: !Ref OrdersTable
+          SENDER_EMAIL: !Ref SenderEmail
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Please upload the actual Lambda code' })
+            };
+          };
+      Tags:
+        - Key: Application
+          Value: NatureMamaHeritage
+
+  # Lambda Permission for API Gateway
+  LambdaApiGatewayPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref OrderHandlerFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:us-east-1:${AWS::AccountId}:${OrdersApi}/*'
+
+  # API Gateway REST API
+  OrdersApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: NatureMamaOrdersAPI
+      Description: REST API for NatureMama Heritage order processing
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Resource
+  OrdersResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref OrdersApi
+      ParentId: !GetAtt OrdersApi.RootResourceId
+      PathPart: orders
+
+  # API Gateway Method - POST
+  OrdersPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref OrdersApi
+      ResourceId: !Ref OrdersResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${OrderHandlerFunction.Arn}/invocations'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # API Gateway Method - OPTIONS (for CORS)
+  OrdersOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref OrdersApi
+      ResourceId: !Ref OrdersResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  # API Gateway Deployment
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - OrdersPostMethod
+      - OrdersOptionsMethod
+    Properties:
+      RestApiId: !Ref OrdersApi
+      StageName: prod
+
+Outputs:
+  ApiUrl:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${OrdersApi}.execute-api.us-east-1.amazonaws.com/prod'
+    Export:
+      Name: NatureMamaApiUrl
+
+  OrdersTableName:
+    Description: 'DynamoDB Orders Table Name'
+    Value: !Ref OrdersTable
+    Export:
+      Name: NatureMamaOrdersTable
+
+  LambdaFunctionArn:
+    Description: 'Lambda Function ARN'
+    Value: !GetAtt OrderHandlerFunction.Arn
+    Export:
+      Name: NatureMamaLambdaArn
+
+  LambdaFunctionName:
+    Description: 'Lambda Function Name'
+    Value: !Ref OrderHandlerFunction
+    Export:
+      Name: NatureMamaLambdaName

@@ -1,0 +1,49 @@
+.hero {
+  background: linear-gradient(135deg, rgba(139, 157, 131, 0.95) 0%, rgba(107, 125, 99, 0.98) 100%),
+              url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%238b9d83" width="1200" height="600"/><path fill="%23ffffff" fill-opacity="0.03" d="M0 300L50 283.3C100 266.7 200 233.3 300 233.3C400 233.3 500 266.7 600 283.3C700 300 800 300 900 283.3C1000 266.7 1100 233.3 1150 216.7L1200 200V600H1150C1100 600 1000 600 900 600C800 600 700 600 600 600C500 600 400 600 300 600C200 600 100 600 50 600H0V300Z"/></svg>');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  padding: 140px 0;
+  text-align: center;
+  position: relative;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  margin-bottom: 25px;
+  font-size: 3.5rem;
+  font-weight: 200;
+  letter-spacing: 3px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 50px;
+  opacity: 0.95;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.95);
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+}

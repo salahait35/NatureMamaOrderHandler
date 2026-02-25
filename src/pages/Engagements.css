@@ -1,0 +1,152 @@
+.engagements-page {
+  padding: 40px 0;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.page-header h1 {
+  margin-bottom: 10px;
+  color: var(--primary);
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: var(--secondary);
+  font-style: italic;
+}
+
+.engagement-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  margin-bottom: 80px;
+  text-align: center;
+}
+
+.hero-stat {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  padding: 50px 30px;
+  border-radius: 8px;
+}
+
+.hero-stat h2 {
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+  font-weight: 300;
+}
+
+.hero-stat p {
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.engagement-section {
+  margin-bottom: 80px;
+}
+
+.engagement-section h2 {
+  text-align: center;
+  margin-bottom: 40px;
+  color: var(--primary);
+  font-size: 2rem;
+}
+
+.engagement-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.engagement-card {
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  transition: transform 0.3s;
+}
+
+.engagement-card:hover {
+  transform: translateY(-5px);
+}
+
+.engagement-card h3 {
+  margin-bottom: 15px;
+  color: var(--primary);
+  font-size: 1.3rem;
+}
+
+.engagement-card p {
+  color: var(--dark);
+  line-height: 1.7;
+}
+
+.certifications {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.cert-badge {
+  background: white;
+  padding: 40px 20px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.cert-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.cert-badge p {
+  color: var(--dark);
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.community-section {
+  text-align: center;
+  background: var(--light);
+  padding: 60px 40px;
+  border-radius: 8px;
+  margin-top: 80px;
+}
+
+.community-section h2 {
+  margin-bottom: 20px;
+  color: var(--primary);
+}
+
+.community-section p {
+  font-size: 1.2rem;
+  margin-bottom: 40px;
+  color: var(--dark);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.community-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .hero-stat h2 {
+    font-size: 2.5rem;
+  }
+  
+  .engagement-content {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,128 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --sage-green: #8b9d83;
+  --sage-dark: #6b7d63;
+  --earth-brown: #8b7355;
+  --earth-light: #b89968;
+  --natural-white: #fafaf8;
+  --cream: #f5f3ed;
+  --dark-text: #3a3a3a;
+  --light-text: #6b6b6b;
+  
+  /* Semantic colors */
+  --primary: var(--sage-green);
+  --secondary: var(--earth-brown);
+  --accent: var(--earth-light);
+  --light: var(--natural-white);
+  --dark: var(--dark-text);
+  --white: #ffffff;
+}
+
+body {
+  font-family: 'Helvetica Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  color: var(--dark);
+  background: var(--natural-white);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* Typography */
+h1, h2, h3 {
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  color: var(--dark-text);
+}
+
+h1 { 
+  font-size: 3rem; 
+  line-height: 1.2;
+}
+h2 { 
+  font-size: 2rem; 
+  line-height: 1.3;
+}
+h3 { 
+  font-size: 1.5rem; 
+  line-height: 1.4;
+}
+
+p {
+  color: var(--light-text);
+  line-height: 1.8;
+}
+
+/* Buttons */
+.btn {
+  padding: 14px 40px;
+  border: none;
+  background: var(--sage-green);
+  color: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+  transition: all 0.4s ease;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 2px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(139, 157, 131, 0.2);
+}
+
+.btn:hover {
+  background: var(--sage-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 157, 131, 0.3);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--sage-green);
+  color: var(--sage-green);
+  box-shadow: none;
+}
+
+.btn-outline:hover {
+  background: var(--sage-green);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 157, 131, 0.2);
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Section */
+section {
+  padding: 80px 0;
+}
