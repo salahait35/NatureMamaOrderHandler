@@ -18,6 +18,7 @@ function Header() {
             <li><Link to="/notre-histoire">Notre Histoire</Link></li>
             <li><Link to="/nos-produits">Nos Produits</Link></li>
             <li><Link to="/nos-engagements">Nos Engagements</Link></li>
+            <li><Link to="/aide">Aide</Link></li>
             <li>
               <Link to="/panier" className="cart-link">
                 Panier {cartCount > 0 && `(${cartCount})`}

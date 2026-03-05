@@ -7,6 +7,7 @@ import Histoire from './pages/Histoire'
 import Produits from './pages/Produits'
 import Engagements from './pages/Engagements'
 import Panier from './pages/Panier'
+import Aide from './pages/Aide'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
               <Route path="/nos-produits" element={<Produits />} />
               <Route path="/nos-engagements" element={<Engagements />} />
               <Route path="/panier" element={<Panier />} />
+              <Route path="/aide" element={<Aide />} />
             </Routes>
           </main>
           <Footer />
