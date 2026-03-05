@@ -1,0 +1,598 @@
+{
+  "schema": 1,
+  "applicationInfo": {
+    "name": "Threat Model Export",
+    "description": "NatureMama Heritage is a French e-commerce platform selling natural dietary supplements (compléments alimentaires). Built with a React/Vite frontend hosted on AWS Amplify, and a serverless backend using AWS API Gateway, Lambda (Node.js 20.x), DynamoDB, and SES. The platform processes customer orders including PII (name, email, address, phone) and sends branded confirmation emails. No payment processing is integrated — orders are placed without credit card handling. The target audience is affluent urban French consumers (CSP+, ages 25-55). Products range from €25-45 per month treatment across 4 product lines (Vitalité, Sérénité, Immunité, Enfants)."
+  },
+  "architecture": {
+    "description": ""
+  },
+  "dataflow": {
+    "description": ""
+  },
+  "assumptions": [
+    {
+      "id": "A001",
+      "numericId": 1,
+      "content": "No payment processing is handled by the application — no credit card or financial transaction data flows through the system",
+      "displayOrder": 1,
+      "metadata": []
+    },
+    {
+      "id": "A002",
+      "numericId": 2,
+      "content": "No user authentication or account system exists — all orders are placed anonymously via a public API endpoint",
+      "displayOrder": 2,
+      "metadata": []
+    },
+    {
+      "id": "A003",
+      "numericId": 3,
+      "content": "CORS is configured with wildcard origin (Access-Control-Allow-Origin: *) allowing any website to call the API",
+      "displayOrder": 3,
+      "metadata": []
+    },
+    {
+      "id": "A004",
+      "numericId": 4,
+      "content": "Customer PII (name, email, address, phone) is stored in DynamoDB without encryption at rest explicitly configured",
+      "displayOrder": 4,
+      "metadata": []
+    },
+    {
+      "id": "A005",
+      "numericId": 5,
+      "content": "The application operates under GDPR jurisdiction as it targets French consumers and collects PII",
+      "displayOrder": 5,
+      "metadata": []
+    },
+    {
+      "id": "A006",
+      "numericId": 6,
+      "content": "SES may be in sandbox mode, limiting email delivery to verified addresses only",
+      "displayOrder": 6,
+      "metadata": []
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "fbb0f2fc-c412-4e50-a7cd-5bdb09622f44",
+      "numericId": 1,
+      "status": "mitigationIdentified",
+      "content": "Implement API Gateway usage plan with API key requirement and throttling (rate limiting). Configure burst limit of 50 requests/second and sustained rate of 20 requests/second.",
+      "displayOrder": 1,
+      "metadata": []
+    },
+    {
+      "id": "bc782a92-7667-40af-a61e-64870c43c58c",
+      "numericId": 2,
+      "status": "mitigationIdentified",
+      "content": "Restrict CORS to the specific Amplify frontend domain instead of wildcard (*). Set Access-Control-Allow-Origin to the actual production URL.",
+      "displayOrder": 2,
+      "metadata": []
+    },
+    {
+      "id": "804773a0-6067-4a77-a207-67e00aed28b5",
+      "numericId": 3,
+      "status": "mitigationIdentified",
+      "content": "Implement comprehensive server-side input validation in Lambda: validate email format, phone format, postal code, sanitize all string fields, enforce maximum field lengths, validate price/quantity ranges, and recalculate total server-side.",
+      "displayOrder": 3,
+      "metadata": []
+    },
+    {
+      "id": "54118cf4-d88b-4c07-b07b-7fd597d86448",
+      "numericId": 4,
+      "status": "mitigationIdentified",
+      "content": "Sanitize all user-provided data before interpolating into HTML email templates. Use HTML entity encoding for customer name, address, and all other user-controlled fields.",
+      "displayOrder": 4,
+      "metadata": []
+    },
+    {
+      "id": "e3222edb-e5c6-49dd-bc03-9ed539e80324",
+      "numericId": 5,
+      "status": "mitigationIdentified",
+      "content": "Enable DynamoDB encryption at rest using AWS-managed KMS key (SSESpecification). Add SSESpecification with SSEEnabled: true to the CloudFormation template.",
+      "displayOrder": 5,
+      "metadata": []
+    },
+    {
+      "id": "f27bd9df-5359-4531-98d1-e5dce4a94318",
+      "numericId": 6,
+      "status": "mitigationIdentified",
+      "content": "Remove verbose error messages from API responses. Replace error.message with generic error messages in the Lambda catch block. Log detailed errors only to CloudWatch.",
+      "displayOrder": 6,
+      "metadata": []
+    },
+    {
+      "id": "c174d326-5f6f-463e-a5c9-96673151ca71",
+      "numericId": 7,
+      "status": "mitigationIdentified",
+      "content": "Remove PII from CloudWatch logs. Stop logging the full event payload. Instead, log only order number, timestamp, and status. Implement structured logging with PII redaction.",
+      "displayOrder": 7,
+      "metadata": []
+    },
+    {
+      "id": "db07db8e-92fb-4e51-97ed-9ff2d9f3e3ea",
+      "numericId": 8,
+      "status": "mitigationIdentified",
+      "content": "Deploy AWS WAF on API Gateway with managed rule groups: AWSManagedRulesCommonRuleSet, AWSManagedRulesBotControlRuleSet, and rate-based rules to block abusive IPs.",
+      "displayOrder": 8,
+      "metadata": []
+    },
+    {
+      "id": "999fceac-8697-4210-b7fb-4b16639ec122",
+      "numericId": 9,
+      "status": "mitigationIdentified",
+      "content": "Use cryptographically secure order number generation (UUID v4 or crypto.randomUUID()) instead of timestamp + 4-digit random number to prevent order enumeration.",
+      "displayOrder": 9,
+      "metadata": []
+    },
+    {
+      "id": "9ff76696-f4de-4f32-931b-4310a053b97a",
+      "numericId": 10,
+      "status": "mitigationIdentified",
+      "content": "Implement GDPR compliance mechanisms: data retention policy, right to erasure API endpoint, data subject access request handling, and privacy policy documentation.",
+      "displayOrder": 10,
+      "metadata": []
+    },
+    {
+      "id": "2b18e718-1bfe-43e1-a98a-1730c3121b81",
+      "numericId": 11,
+      "status": "mitigationIdentified",
+      "content": "Implement email sending rate limiting and recipient validation in Lambda. Limit to verified email domains, add CAPTCHA or honeypot to the checkout form to prevent automated abuse.",
+      "displayOrder": 11,
+      "metadata": []
+    },
+    {
+      "id": "d5c65ce9-60a1-4d06-9836-51b9662330b3",
+      "numericId": 12,
+      "status": "mitigationIdentified",
+      "content": "Restrict SES IAM policy to specific verified sender identity ARN instead of wildcard Resource: '*'. Scope SES permissions to the verified sender email only.",
+      "displayOrder": 12,
+      "metadata": []
+    },
+    {
+      "id": "95bed72e-0ad1-4ed5-aa38-d139233d8f49",
+      "numericId": 13,
+      "status": "mitigationIdentified",
+      "content": "Enable DynamoDB Point-in-Time Recovery (PITR) for data backup and recovery. Add PointInTimeRecoverySpecification to CloudFormation template.",
+      "displayOrder": 13,
+      "metadata": []
+    },
+    {
+      "id": "472caea5-64db-431b-a88b-a31b7366661e",
+      "numericId": 14,
+      "status": "mitigationIdentified",
+      "content": "Log source IP address, user-agent, and request ID with each order for non-repudiation and audit trail. Enable API Gateway access logging.",
+      "displayOrder": 14,
+      "metadata": []
+    },
+    {
+      "id": "21d4a339-fa98-46b6-9780-a60e636eb7fa",
+      "numericId": 15,
+      "status": "mitigationIdentified",
+      "content": "Remove unnecessary DynamoDB Scan permission from Lambda IAM role. The function only needs PutItem for order creation. Remove GetItem, Query, and Scan to follow least privilege.",
+      "displayOrder": 15,
+      "metadata": []
+    },
+    {
+      "id": "79594a1e-b20e-4ad0-acfc-26b91305dbd4",
+      "numericId": 16,
+      "status": "mitigationIdentified",
+      "content": "Configure SES with DKIM, SPF, and DMARC records for the sender domain. Enable TLS enforcement for outbound email delivery where supported by recipient mail servers.",
+      "displayOrder": 16,
+      "metadata": []
+    }
+  ],
+  "assumptionLinks": [],
+  "mitigationLinks": [
+    {
+      "linkedId": "8ec64eb1-c0d1-4c5b-b90f-3c09fe183f90",
+      "mitigationId": "54118cf4-d88b-4c07-b07b-7fd597d86448"
+    },
+    {
+      "linkedId": "8ec64eb1-c0d1-4c5b-b90f-3c09fe183f90",
+      "mitigationId": "804773a0-6067-4a77-a207-67e00aed28b5"
+    },
+    {
+      "linkedId": "6d5461bb-a516-4401-a110-b1f844c9c834",
+      "mitigationId": "e3222edb-e5c6-49dd-bc03-9ed539e80324"
+    },
+    {
+      "linkedId": "6d5461bb-a516-4401-a110-b1f844c9c834",
+      "mitigationId": "21d4a339-fa98-46b6-9780-a60e636eb7fa"
+    },
+    {
+      "linkedId": "9ab1c857-114a-47a4-966d-d81b0af18a08",
+      "mitigationId": "804773a0-6067-4a77-a207-67e00aed28b5"
+    },
+    {
+      "linkedId": "bcc385cd-3d68-4a56-a1ad-eaff2cfb16ff",
+      "mitigationId": "f27bd9df-5359-4531-98d1-e5dce4a94318"
+    },
+    {
+      "linkedId": "f52c83eb-281c-4ffc-ad9f-2d0b6e3f3af7",
+      "mitigationId": "fbb0f2fc-c412-4e50-a7cd-5bdb09622f44"
+    },
+    {
+      "linkedId": "f52c83eb-281c-4ffc-ad9f-2d0b6e3f3af7",
+      "mitigationId": "db07db8e-92fb-4e51-97ed-9ff2d9f3e3ea"
+    },
+    {
+      "linkedId": "f52c83eb-281c-4ffc-ad9f-2d0b6e3f3af7",
+      "mitigationId": "2b18e718-1bfe-43e1-a98a-1730c3121b81"
+    },
+    {
+      "linkedId": "bd1872bd-f9c7-4f9e-bdbe-2ae3a8e85e13",
+      "mitigationId": "999fceac-8697-4210-b7fb-4b16639ec122"
+    },
+    {
+      "linkedId": "8e7b42c8-5af9-4142-ab2b-b8e70bc6ae8b",
+      "mitigationId": "fbb0f2fc-c412-4e50-a7cd-5bdb09622f44"
+    },
+    {
+      "linkedId": "8e7b42c8-5af9-4142-ab2b-b8e70bc6ae8b",
+      "mitigationId": "db07db8e-92fb-4e51-97ed-9ff2d9f3e3ea"
+    },
+    {
+      "linkedId": "8abae637-a1da-434b-84f2-85a669b70816",
+      "mitigationId": "bc782a92-7667-40af-a61e-64870c43c58c"
+    },
+    {
+      "linkedId": "91930122-cfbb-4e98-a700-f0e484fda495",
+      "mitigationId": "c174d326-5f6f-463e-a5c9-96673151ca71"
+    },
+    {
+      "linkedId": "79163bed-8cff-447b-8372-80edc8d88560",
+      "mitigationId": "2b18e718-1bfe-43e1-a98a-1730c3121b81"
+    },
+    {
+      "linkedId": "79163bed-8cff-447b-8372-80edc8d88560",
+      "mitigationId": "d5c65ce9-60a1-4d06-9836-51b9662330b3"
+    },
+    {
+      "linkedId": "68d632ae-f876-4894-a26d-d3340c93ebdd",
+      "mitigationId": "472caea5-64db-431b-a88b-a31b7366661e"
+    },
+    {
+      "linkedId": "a94a3c2d-40e7-4e89-a56b-4dc60bcba93a",
+      "mitigationId": "9ff76696-f4de-4f32-931b-4310a053b97a"
+    },
+    {
+      "linkedId": "6d5461bb-a516-4401-a110-b1f844c9c834",
+      "mitigationId": "95bed72e-0ad1-4ed5-aa38-d139233d8f49"
+    },
+    {
+      "linkedId": "8abae637-a1da-434b-84f2-85a669b70816",
+      "mitigationId": "db07db8e-92fb-4e51-97ed-9ff2d9f3e3ea"
+    },
+    {
+      "linkedId": "79163bed-8cff-447b-8372-80edc8d88560",
+      "mitigationId": "db07db8e-92fb-4e51-97ed-9ff2d9f3e3ea"
+    },
+    {
+      "linkedId": "a94a3c2d-40e7-4e89-a56b-4dc60bcba93a",
+      "mitigationId": "c174d326-5f6f-463e-a5c9-96673151ca71"
+    },
+    {
+      "linkedId": "a8ad4b8d-25b1-4e6f-a0a8-9a55e98414fc",
+      "mitigationId": "21d4a339-fa98-46b6-9780-a60e636eb7fa"
+    },
+    {
+      "linkedId": "79163bed-8cff-447b-8372-80edc8d88560",
+      "mitigationId": "fbb0f2fc-c412-4e50-a7cd-5bdb09622f44"
+    },
+    {
+      "linkedId": "178cd0f4-f198-4848-8814-87c86771980a",
+      "mitigationId": "79594a1e-b20e-4ad0-acfc-26b91305dbd4"
+    }
+  ],
+  "threats": [
+    {
+      "id": "9ab1c857-114a-47a4-966d-d81b0af18a08",
+      "numericId": 1,
+      "threatSource": "External attacker",
+      "prerequisites": "with ability to craft HTTP requests to the public API endpoint",
+      "threatAction": "manipulate order data by sending crafted JSON payloads with negative prices, zero totals, or excessively large quantities to bypass minimal server-side validation",
+      "threatImpact": "orders stored with manipulated prices/totals, business logic bypass, potential financial loss if payment is later reconciled against stored totals",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008",
+        "A009"
+      ],
+      "statement": "A External attacker with ability to craft HTTP requests to the public API endpoint can manipulate order data by sending crafted JSON payloads with negative prices, zero totals, or excessively large quantities to bypass minimal server-side validation, which leads to orders stored with manipulated prices/totals, business logic bypass, potential financial loss if payment is later reconciled against stored totals",
+      "displayOrder": 1,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-T",
+        "Input Validation",
+        "API"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "68d632ae-f876-4894-a26d-d3340c93ebdd",
+      "numericId": 2,
+      "threatSource": "Malicious customer or fraudster",
+      "prerequisites": "after placing an order through the anonymous checkout",
+      "threatAction": "deny having placed an order since there is no user authentication, no digital signature, and no IP address logging tied to orders",
+      "threatImpact": "inability to prove order origin, potential disputes, no audit trail linking orders to specific users or sessions",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008",
+        "A009"
+      ],
+      "statement": "A Malicious customer or fraudster after placing an order through the anonymous checkout can deny having placed an order since there is no user authentication, no digital signature, and no IP address logging tied to orders, which leads to inability to prove order origin, potential disputes, no audit trail linking orders to specific users or sessions",
+      "displayOrder": 2,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-R",
+        "Logging",
+        "Non-repudiation"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "178cd0f4-f198-4848-8814-87c86771980a",
+      "numericId": 3,
+      "threatSource": "Network eavesdropper or compromised email relay",
+      "prerequisites": "with ability to intercept SMTP traffic between SES and recipient mail server",
+      "threatAction": "intercept confirmation emails containing customer PII (name, address, phone, order details) as they traverse external SMTP relays in plaintext HTML",
+      "threatImpact": "exposure of customer PII and order details during email transit, no end-to-end encryption on email content",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008",
+        "A010"
+      ],
+      "statement": "A Network eavesdropper or compromised email relay with ability to intercept SMTP traffic between SES and recipient mail server can intercept confirmation emails containing customer PII (name, address, phone, order details) as they traverse external SMTP relays in plaintext HTML, which leads to exposure of customer PII and order details during email transit, no end-to-end encryption on email content",
+      "displayOrder": 3,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-I",
+        "Email",
+        "PII",
+        "SMTP"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "8e7b42c8-5af9-4142-ab2b-b8e70bc6ae8b",
+      "numericId": 4,
+      "threatSource": "External attacker or automated bot",
+      "prerequisites": "with access to the public API endpoint (no rate limiting, no authentication, no WAF)",
+      "threatAction": "flood the POST /orders endpoint with massive volumes of requests, exhausting Lambda concurrent executions, filling DynamoDB with junk data, and triggering excessive SES email sends",
+      "threatImpact": "service unavailability, significant AWS cost spike (Lambda invocations, DynamoDB writes, SES sends), potential SES reputation damage and sending suspension",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A009"
+      ],
+      "statement": "A External attacker or automated bot with access to the public API endpoint (no rate limiting, no authentication, no WAF) can flood the POST /orders endpoint with massive volumes of requests, exhausting Lambda concurrent executions, filling DynamoDB with junk data, and triggering excessive SES email sends, which leads to service unavailability, significant AWS cost spike (Lambda invocations, DynamoDB writes, SES sends), potential SES reputation damage and sending suspension",
+      "displayOrder": 4,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-D",
+        "API",
+        "Rate Limiting",
+        "Cost"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "6d5461bb-a516-4401-a110-b1f844c9c834",
+      "numericId": 5,
+      "threatSource": "Insider or attacker with compromised AWS credentials",
+      "prerequisites": "with compromised AWS credentials or overly permissive IAM policies",
+      "threatAction": "access customer PII stored in DynamoDB without encryption at rest, or perform unauthorized Scan operations to exfiltrate all customer data (IAM policy grants Scan permission)",
+      "threatImpact": "mass exposure of all customer PII, GDPR breach notification required, reputational damage, potential regulatory fines",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008"
+      ],
+      "statement": "A Insider or attacker with compromised AWS credentials with compromised AWS credentials or overly permissive IAM policies can access customer PII stored in DynamoDB without encryption at rest, or perform unauthorized Scan operations to exfiltrate all customer data (IAM policy grants Scan permission), which leads to mass exposure of all customer PII, GDPR breach notification required, reputational damage, potential regulatory fines",
+      "displayOrder": 5,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-I",
+        "DynamoDB",
+        "Encryption",
+        "GDPR"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "8abae637-a1da-434b-84f2-85a669b70816",
+      "numericId": 6,
+      "threatSource": "Malicious website operator",
+      "prerequisites": "with knowledge of the API endpoint URL (discoverable from frontend JavaScript source)",
+      "threatAction": "craft requests from any origin due to wildcard CORS (Access-Control-Allow-Origin: *), enabling cross-site order submission from malicious websites",
+      "threatImpact": "orders placed on behalf of unsuspecting users visiting malicious sites, SES used as email relay, brand reputation damage",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008"
+      ],
+      "statement": "A Malicious website operator with knowledge of the API endpoint URL (discoverable from frontend JavaScript source) can craft requests from any origin due to wildcard CORS (Access-Control-Allow-Origin: *), enabling cross-site order submission from malicious websites, which leads to orders placed on behalf of unsuspecting users visiting malicious sites, SES used as email relay, brand reputation damage",
+      "displayOrder": 6,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-S",
+        "CORS",
+        "CSRF"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "a8ad4b8d-25b1-4e6f-a0a8-9a55e98414fc",
+      "numericId": 7,
+      "threatSource": "Sophisticated external attacker",
+      "prerequisites": "with ability to exploit a vulnerability in the Lambda function or its dependencies",
+      "threatAction": "exploit a vulnerability in Lambda dependencies (aws-sdk packages) or Node.js runtime to escalate privileges beyond the Lambda execution role, potentially accessing other AWS resources",
+      "threatImpact": "unauthorized access to AWS account resources beyond the Lambda role scope, potential lateral movement within the AWS account",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A012"
+      ],
+      "statement": "A Sophisticated external attacker with ability to exploit a vulnerability in the Lambda function or its dependencies can exploit a vulnerability in Lambda dependencies (aws-sdk packages) or Node.js runtime to escalate privileges beyond the Lambda execution role, potentially accessing other AWS resources, which leads to unauthorized access to AWS account resources beyond the Lambda role scope, potential lateral movement within the AWS account",
+      "displayOrder": 7,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-E",
+        "Lambda",
+        "IAM",
+        "Supply Chain"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "8ec64eb1-c0d1-4c5b-b90f-3c09fe183f90",
+      "numericId": 8,
+      "threatSource": "External attacker",
+      "prerequisites": "with ability to send crafted JSON to the API endpoint",
+      "threatAction": "inject malicious HTML/JavaScript into customer name, address, or other fields that are directly interpolated into the confirmation email HTML template without sanitization",
+      "threatImpact": "stored XSS in confirmation emails, potential phishing via branded NatureMama emails, email client exploitation",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008",
+        "A009"
+      ],
+      "statement": "A External attacker with ability to send crafted JSON to the API endpoint can inject malicious HTML/JavaScript into customer name, address, or other fields that are directly interpolated into the confirmation email HTML template without sanitization, which leads to stored XSS in confirmation emails, potential phishing via branded NatureMama emails, email client exploitation",
+      "displayOrder": 8,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-T",
+        "Injection",
+        "XSS",
+        "Email"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "79163bed-8cff-447b-8372-80edc8d88560",
+      "numericId": 9,
+      "threatSource": "External attacker or spam bot",
+      "prerequisites": "with ability to submit orders with arbitrary email addresses",
+      "threatAction": "abuse the SES email sending capability by submitting orders with victim email addresses, using the system as an email relay to send branded NatureMama emails to arbitrary recipients",
+      "threatImpact": "SES reputation damage, potential SES sending suspension, brand used for spam/phishing, SES bounce rate increase, AWS account flagged",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008"
+      ],
+      "statement": "A External attacker or spam bot with ability to submit orders with arbitrary email addresses can abuse the SES email sending capability by submitting orders with victim email addresses, using the system as an email relay to send branded NatureMama emails to arbitrary recipients, which leads to SES reputation damage, potential SES sending suspension, brand used for spam/phishing, SES bounce rate increase, AWS account flagged",
+      "displayOrder": 9,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-S",
+        "SES",
+        "Email Abuse",
+        "Spam"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "bd1872bd-f9c7-4f9e-bdbe-2ae3a8e85e13",
+      "numericId": 10,
+      "threatSource": "External attacker",
+      "prerequisites": "with knowledge that order numbers follow a predictable pattern (NMH-{timestamp}-{random with only 4 digits})",
+      "threatAction": "predict or enumerate order numbers due to the weak generation algorithm (timestamp + 4-digit random), potentially enabling order lookup or manipulation if future read endpoints are added",
+      "threatImpact": "order enumeration, potential unauthorized access to order details if read APIs are added later, weak non-repudiation",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008"
+      ],
+      "statement": "A External attacker with knowledge that order numbers follow a predictable pattern (NMH-{timestamp}-{random with only 4 digits}) can predict or enumerate order numbers due to the weak generation algorithm (timestamp + 4-digit random), potentially enabling order lookup or manipulation if future read endpoints are added, which leads to order enumeration, potential unauthorized access to order details if read APIs are added later, weak non-repudiation",
+      "displayOrder": 10,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-T",
+        "Order Number",
+        "Predictability"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "bcc385cd-3d68-4a56-a1ad-eaff2cfb16ff",
+      "numericId": 11,
+      "threatSource": "External attacker",
+      "prerequisites": "by sending a malformed request that triggers a Lambda error",
+      "threatAction": "extract internal system information from verbose error responses that include error.message in the JSON response body",
+      "threatImpact": "disclosure of internal error details, stack traces, AWS service names, and potentially sensitive configuration information that aids further attacks",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008"
+      ],
+      "statement": "A External attacker by sending a malformed request that triggers a Lambda error can extract internal system information from verbose error responses that include error.message in the JSON response body, which leads to disclosure of internal error details, stack traces, AWS service names, and potentially sensitive configuration information that aids further attacks",
+      "displayOrder": 11,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-I",
+        "Error Handling",
+        "Information Leakage"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "f52c83eb-281c-4ffc-ad9f-2d0b6e3f3af7",
+      "numericId": 12,
+      "threatSource": "Spam bot or malicious script",
+      "prerequisites": "with access to the API Gateway URL (publicly discoverable in frontend source code)",
+      "threatAction": "submit fake orders with fabricated customer data to the unauthenticated POST /orders endpoint, flooding DynamoDB and triggering SES emails to arbitrary addresses",
+      "threatImpact": "DynamoDB flooded with fake orders, SES used to send spam emails to arbitrary addresses, increased AWS costs, data integrity compromised",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008"
+      ],
+      "statement": "A Spam bot or malicious script with access to the API Gateway URL (publicly discoverable in frontend source code) can submit fake orders with fabricated customer data to the unauthenticated POST /orders endpoint, flooding DynamoDB and triggering SES emails to arbitrary addresses, which leads to DynamoDB flooded with fake orders, SES used to send spam emails to arbitrary addresses, increased AWS costs, data integrity compromised",
+      "displayOrder": 12,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-S",
+        "API",
+        "Authentication"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "91930122-cfbb-4e98-a700-f0e484fda495",
+      "numericId": 13,
+      "threatSource": "Insider or AWS account user",
+      "prerequisites": "with access to CloudWatch logs (any AWS user with logs:GetLogEvents permission)",
+      "threatAction": "access customer PII (name, email, address, phone) from CloudWatch logs where the Lambda function logs the entire event payload via console.log",
+      "threatImpact": "exposure of customer PII in logs, GDPR violation, no log retention policy means PII persists indefinitely",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008"
+      ],
+      "statement": "A Insider or AWS account user with access to CloudWatch logs (any AWS user with logs:GetLogEvents permission) can access customer PII (name, email, address, phone) from CloudWatch logs where the Lambda function logs the entire event payload via console.log, which leads to exposure of customer PII in logs, GDPR violation, no log retention policy means PII persists indefinitely",
+      "displayOrder": 13,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-I",
+        "PII",
+        "Logging",
+        "GDPR"
+      ],
+      "metadata": []
+    },
+    {
+      "id": "a94a3c2d-40e7-4e89-a56b-4dc60bcba93a",
+      "numericId": 14,
+      "threatSource": "Regulatory authority or data subject",
+      "prerequisites": "given that no data retention or deletion mechanism exists",
+      "threatAction": "violate GDPR right to erasure (Article 17) as there is no mechanism to delete customer PII from DynamoDB, CloudWatch logs, or SES delivery records",
+      "threatImpact": "GDPR non-compliance, potential regulatory fines up to 4% of annual turnover, inability to honor data subject access requests",
+      "impactedGoal": [],
+      "impactedAssets": [
+        "A008"
+      ],
+      "statement": "A Regulatory authority or data subject given that no data retention or deletion mechanism exists can violate GDPR right to erasure (Article 17) as there is no mechanism to delete customer PII from DynamoDB, CloudWatch logs, or SES delivery records, which leads to GDPR non-compliance, potential regulatory fines up to 4% of annual turnover, inability to honor data subject access requests",
+      "displayOrder": 14,
+      "status": "threatIdentified",
+      "tags": [
+        "STRIDE-I",
+        "GDPR",
+        "Data Retention",
+        "Right to Erasure"
+      ],
+      "metadata": []
+    }
+  ]
+}
