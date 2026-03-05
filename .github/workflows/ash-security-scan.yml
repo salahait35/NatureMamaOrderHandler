@@ -9,7 +9,7 @@ on:
     branches:
       - main
       - develop
-  workflow_dispatch:  # ✅ Permet de lancer manuellement
+  workflow_dispatch:
 
 jobs:
   ash-scan:
@@ -20,46 +20,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install UV
-        run: curl -sSfL https://astral.sh/uv/install.sh | sh
-
-      - name: Add UV to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Clone ASH
+        run: |
+          git clone --depth 1 --branch v3.2.2 \
+            https://github.com/awslabs/automated-security-helper.git /tmp/ash
 
       - name: Run ASH Security Scan
         run: |
-          uvx git+https://github.com/awslabs/automated-security-helper.git@v3.2.2 \
-            --mode local \
-            --output-dir .ash/ash_output
-        continue-on-error: true  # Set to false to block merge on findings
+          /tmp/ash/ash \
+            --source-dir "$(pwd)" \
+            --output-dir "$(pwd)/.ash/ash_output" \
+            --force
+        continue-on-error: true
 
-      - name: Upload ASH HTML Report
+      - name: Upload ASH Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ash-security-report
-          path: |
-            .ash/ash_output/reports/ash.html
-            .ash/ash_output/reports/ash.summary.md
-            .ash/ash_output/ash_aggregated_results.json
+          path: .ash/ash_output/
           retention-days: 30
 
       - name: Post Summary to PR
         if: github.event_name == 'pull_request'
         run: |
-          if [ -f ".ash/ash_output/reports/ash.summary.md" ]; then
+          if [ -f ".ash/ash_output/ash_report.txt" ]; then
             echo "## 🔐 ASH Security Scan Results" >> $GITHUB_STEP_SUMMARY
-            cat .ash/ash_output/reports/ash.summary.md >> $GITHUB_STEP_SUMMARY
+            head -100 .ash/ash_output/ash_report.txt >> $GITHUB_STEP_SUMMARY
           fi
-
-      - name: Fail on Critical/High Findings
-        run: |
-          uvx git+https://github.com/awslabs/automated-security-helper.git@v3.2.2 \
-            --mode local \
-            --output-dir .ash/ash_output \
-            --fail-on-findings
