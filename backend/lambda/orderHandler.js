@@ -140,20 +140,20 @@ function generateEmailHTML(orderNumber, customer, items, total) {
 exports.handler = async (event) => {
   console.log('Event:', JSON.stringify(event, null, 2));
 
-  // CORS headers
+  // CORS headers - Plus permissifs
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+    'Access-Control-Allow-Methods': 'OPTIONS,POST',
     'Content-Type': 'application/json'
   };
 
-  // Handle OPTIONS request
-  if (event.httpMethod === 'OPTIONS') {
+  // Handle OPTIONS request (preflight)
+  if (event.httpMethod === 'OPTIONS' || event.requestContext?.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
       headers,
-      body: ''
+      body: JSON.stringify({ message: 'CORS preflight successful' })
     };
   }
 
